@@ -1,0 +1,67 @@
+{
+  "name": "boom",
+  "version": "1.1.0",
+  "description": "Boom — Films & Séries",
+  "main": "electron/main.js",
+  "author": "Boom",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64",
+    "release": "electron-builder --win --x64 --publish always"
+  },
+  "build": {
+    "appId": "live.boomplay.app",
+    "productName": "Boom",
+    "copyright": "© 2025 Boom",
+    "directories": {
+      "output": "dist"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "RICKOLLAS12",
+      "repo": "BoomDesktop"
+    },
+    "files": [
+      "electron/**/*",
+      "server/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "server",
+        "to": "server"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Boom"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    }
+  },
+  "dependencies": {
+    "electron-is-dev": "^2.0.0",
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}

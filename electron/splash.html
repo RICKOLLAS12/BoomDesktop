@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0D0D0D;
+    color: white;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-app-region: drag;
+  }
+  .logo { animation: pop 0.6s cubic-bezier(0.175,0.885,0.32,1.275) forwards; transform: scale(0); }
+  .title { margin-top: 16px; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; animation: fade-up 0.5s ease 0.4s both; }
+  .sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; animation: fade-up 0.5s ease 0.6s both; }
+  .loader {
+    margin-top: 32px;
+    width: 36px; height: 36px;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-top-color: #E50914;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite, fade-up 0.5s ease 0.8s both;
+    opacity: 0;
+  }
+  @keyframes pop { to { transform: scale(1); } }
+  @keyframes fade-up { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <svg class="logo" width="80" height="80" viewBox="0 0 108 108" fill="none">
+    <path d="M54,10 A44,44 0 0 1 98,54" stroke="#E50914" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M34,28 L34,80 L44,80 L44,28 Z" fill="#FFFFFF"/>
+    <path d="M44,28 L60,28 Q76,28 76,44 Q76,54 66,57 Q78,60 78,72 Q78,80 62,80 L44,80 L44,57 L62,57 Q68,57 68,50 Q68,38 58,38 L44,38 Z" fill="#FFFFFF"/>
+    <path d="M44,57 L62,57 Q70,57 70,68 Q70,72 62,72 L44,72 Z" fill="#E50914"/>
+  </svg>
+  <div class="title">Boom</div>
+  <div class="sub">Films &amp; Séries</div>
+  <div class="loader"></div>
+</body>
+</html>
