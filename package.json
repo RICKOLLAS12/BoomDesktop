@@ -1,6 +1,6 @@
 {
   "name": "boom",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Boom — Films & Séries",
   "main": "electron/main.js",
   "author": "Boom",
@@ -24,14 +24,7 @@
     },
     "files": [
       "electron/**/*",
-      "server/**/*",
       "node_modules/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "server",
-        "to": "server"
-      }
     ],
     "win": {
       "target": [

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src https:; img-src data:">
+<title>Boom</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0D0D0D; color: #fff; font-family: system-ui, -apple-system, sans-serif;
+         display: flex; flex-direction: column; align-items: center; justify-content: center;
+         height: 100vh; text-align: center; padding: 24px; }
+  h1 { font-size: 24px; font-weight: 800; }
+  p { margin-top: 10px; font-size: 14px; color: rgba(255,255,255,.55); max-width: 360px; line-height: 1.5; }
+  button { margin-top: 24px; padding: 11px 28px; border: 0; border-radius: 8px; background: #E50914;
+           color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .dot { margin-top: 18px; font-size: 11px; color: rgba(255,255,255,.3); }
+</style>
+</head>
+<body>
+  <h1>Connexion impossible</h1>
+  <p>Boom a besoin d'internet. Vérifie ta connexion : on réessaie automatiquement.</p>
+  <button id="retry">Réessayer</button>
+  <div class="dot" id="state">Nouvelle tentative dans quelques secondes…</div>
+<script>
+  const target = new URLSearchParams(location.search).get("url") || "https://boomplay.live";
+  const go = () => { location.href = target; };
+  document.getElementById("retry").addEventListener("click", go);
+  // Probe the site every 5s and reload as soon as it answers.
+  setInterval(async () => {
+    try {
+      await fetch(target, { mode: "no-cors", cache: "no-store" });
+      go();
+    } catch { /* still offline */ }
+  }, 5000);
+</script>
+</body>
+</html>
