@@ -1,13 +1,14 @@
-const { app, BrowserWindow, shell, session, ipcMain, Notification } = require("electron");
+const { app, BrowserWindow, shell, ipcMain } = require("electron");
 const path = require("path");
-const { spawn } = require("child_process");
-const http = require("http");
 const { autoUpdater } = require("electron-updater");
 
-const PORT = 3210;
+// Boom is a thin shell around the hosted site: every deployment of the web app reaches
+// desktop users immediately, and no server, database credential or native binary
+// is shipped in the installer. BOOM_URL is only meant for testing against another host.
+const APP_URL = process.env.BOOM_URL || "https://boomplay.live";
+const APP_ORIGIN = new URL(APP_URL).origin;
 let mainWindow = null;
 let splashWindow = null;
-let serverProcess = null;
 
 // ─── Auto-updater config ─────────────────────────────────────────
 autoUpdater.autoDownload = true;
@@ -63,11 +64,18 @@ function createMain() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
-      session: session.defaultSession,
     },
   });
 
-  mainWindow.loadURL(`http://localhost:${PORT}`);
+  mainWindow.loadURL(APP_URL);
+
+  // Offline / site unreachable: show a retry page instead of a blank window.
+  // errorCode -3 is a navigation aborted by a redirect, not a real failure.
+  mainWindow.webContents.on("did-fail-load", (_e, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    if (!isMainFrame || errorCode === -3) return;
+    console.error(`[boom] failed to load ${validatedURL}: ${errorDescription} (${errorCode})`);
+    mainWindow.loadFile(path.join(__dirname, "offline.html"), { query: { url: APP_URL } });
+  });
 
   mainWindow.once("ready-to-show", () => {
     if (splashWindow && !splashWindow.isDestroyed()) {
@@ -85,7 +93,7 @@ function createMain() {
 
   // Open external links in system browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (!url.startsWith(`http://localhost:${PORT}`)) {
+    if (new URL(url).origin !== APP_ORIGIN) {
       shell.openExternal(url);
       return { action: "deny" };
     }
@@ -95,65 +103,29 @@ function createMain() {
   mainWindow.on("closed", () => { mainWindow = null; });
 }
 
-// ─── Start Next.js server ────────────────────────────────────────
-function startServer() {
-  const serverDir = app.isPackaged
-    ? path.join(process.resourcesPath, "server")
-    : path.join(__dirname, "..", "server");
-
-  const serverScript = path.join(serverDir, "server.js");
-
-  serverProcess = spawn(process.execPath, [serverScript], {
-    env: {
-      ...process.env,
-      PORT: String(PORT),
-      NODE_ENV: "production",
-      HOSTNAME: "127.0.0.1",
-    },
-    cwd: serverDir,
-  });
-
-  serverProcess.stdout?.on("data", (d) => console.log("[server]", d.toString().trim()));
-  serverProcess.stderr?.on("data", (d) => console.error("[server]", d.toString().trim()));
-}
-
-// ─── Wait until Next.js is ready ────────────────────────────────
-function waitForServer(retries = 30, delay = 500) {
-  return new Promise((resolve, reject) => {
-    const attempt = () => {
-      http.get(`http://localhost:${PORT}`, (res) => {
-        if (res.statusCode < 500) resolve();
-        else setTimeout(attempt, delay);
-      }).on("error", () => {
-        if (retries-- <= 0) reject(new Error("Server did not start"));
-        else setTimeout(attempt, delay);
-      });
-    };
-    attempt();
-  });
-}
-
 // ─── App lifecycle ────────────────────────────────────────────────
-app.whenReady().then(async () => {
+// Only one Boom at a time: a second launch focuses the existing window instead of
+// opening another one (and a stray extra instance can never pile up).
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
+
+app.whenReady().then(() => {
+  if (!gotLock) return;
   createSplash();
-  startServer();
-
-  try {
-    await waitForServer();
-  } catch {
-    console.error("Server failed to start");
-  }
-
   createMain();
 });
 
 app.on("window-all-closed", () => {
-  if (serverProcess) serverProcess.kill();
   if (process.platform !== "darwin") app.quit();
-});
-
-app.on("before-quit", () => {
-  if (serverProcess) serverProcess.kill();
 });
 
 app.on("activate", () => {
